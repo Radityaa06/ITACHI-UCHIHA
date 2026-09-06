@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>うちはイタチ — ITACHI UCHIHA / 赤い月 · 万華鏡写輪眼</title>
+<meta name="description" content="うちはイタチの孤高なる生涯。万華鏡写輪眼、月読、天照、そして一族の宿命を背負った真の英雄。" />
+<meta name="google" content="notranslate" />
+<script>
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+  if (location.hash) {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  window.scrollTo(0, 0);
+
+  // Lock scroll strictly at 0 during initial load/reload
+  window.__lockInitialScroll = true;
+  window.__forceTop = function() {
+    if (window.__lockInitialScroll) {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    }
+  };
+  window.addEventListener('scroll', window.__forceTop, { passive: true });
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Shippori+Mincho:wght@400;600;800&family=Kaisei+Tokumin:wght@400;700&family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="itachi.css?v=itachi_joe_v8" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+
+<audio id="bgmAudio" src="art/itachi-theme.mp3?v=1" preload="auto" loop></audio>
+
+<!-- ══════════ PRELOADER — 万華鏡写輪眼 ══════════ -->
+<div class="loader" id="loader">
+  <div class="loader__inner">
+    <svg class="loader__seal" viewBox="0 0 120 120" aria-hidden="true">
+      <circle class="sealring" cx="60" cy="60" r="54" />
+      <circle class="sealring sealring--in" cx="60" cy="60" r="42" />
+      <circle cx="60" cy="60" r="7.5" fill="currentColor"/>
+      <g id="blades">
+        <path d="M 60 60 C 56 46, 44 32, 54 18 C 70 28, 72 48, 60 60 Z" fill="currentColor"/>
+        <path d="M 60 60 C 56 46, 44 32, 54 18 C 70 28, 72 48, 60 60 Z" fill="currentColor" transform="rotate(120 60 60)"/>
+        <path d="M 60 60 C 56 46, 44 32, 54 18 C 70 28, 72 48, 60 60 Z" fill="currentColor" transform="rotate(240 60 60)"/>
+      </g>
+    </svg>
+    <div class="loader__glyph">写輪眼</div>
+    <div class="loader__bar"><span id="loaderFill"></span></div>
+    <div class="loader__meta">
+      <span id="loaderMsg">瞳術発動 / ACTIVATING OCULAR JUTSU</span>
+      <span id="loaderPct">00</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ AMBIENT LAYERS ══════════ -->
+<div class="grain" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<canvas class="sky" id="skyCanvas" aria-hidden="true"></canvas>
+<canvas class="sparks" id="sparkCanvas" aria-hidden="true"></canvas>
+<canvas class="thundersky" id="thunderCanvas" aria-hidden="true"></canvas>
+<div class="thunderflash" id="legacyFlash" aria-hidden="true"></div>
+<div class="flashwipe" id="flashWipe" aria-hidden="true"></div>
+<div class="cursor" id="cursor" aria-hidden="true"><i></i><b></b></div>
+
+<!-- ══════════ FIXED CHROME ══════════ -->
+<header class="chrome" id="chrome">
+  <a class="chrome__mark" href="#top">
+    <svg viewBox="0 0 100 100" class="uchiha-crest" aria-hidden="true">
+      <path d="M 22 42 A 28 28 0 0 1 78 42 Z" fill="#ff1a35"/>
+      <path d="M 22 42 A 28 28 0 0 0 78 42 Z" fill="#f8eef1"/>
+      <rect x="46" y="68" width="8" height="22" rx="2" fill="#f8eef1"/>
+      <circle cx="50" cy="42" r="28" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+    </svg>
+    <span>うちは</span>
+  </a>
+  <nav class="chrome__nav">
+    <a href="#top" data-jp="覚">AWAKEN</a>
+    <a href="#particles" data-jp="烏">CROWS</a>
+    <a href="#dash" data-jp="幻">GENJUTSU</a>
+    <a href="#rasengan" data-jp="月">TSUKUYOMI</a>
+    <a href="#legacy" data-jp="宿">LEGACY</a>
+  </nav>
+  <div class="chrome__controls">
+    <button class="audio-btn" id="audioBtn" aria-label="Toggle Soundtrack" title="Toggle Itachi Theme (Akatsuki)">
+      <span class="audio-btn__icon" id="audioBtnIcon">🔊</span>
+      <span class="audio-btn__label">ITACHI BGM</span>
+      <span class="audio-btn__bars">
+        <span></span><span></span><span></span><span></span>
+      </span>
+    </button>
+    <div class="chrome__clock" id="chromeClock">00.0 s</div>
+  </div>
+</header>
+
+<div class="rail rail--left" aria-hidden="true">
+  <span>木ノ葉隠れの里 · 暗部 · 暁 · うちは一族</span>
+</div>
+<div class="rail rail--right" aria-hidden="true">
+  <span id="railScroll">CHAKRA 000</span>
+</div>
+
+<main>
+
+<!-- ══════════ ACT I — SCROLL SCRUB: 覚醒 ══════════ -->
+<section class="scrub" id="top">
+  <div class="scrub__sticky">
+    <canvas id="gazeCanvas"></canvas>
+    <div class="scrub__wash" id="scrubWash"></div>
+    <div class="scrub__bars" aria-hidden="true"><i></i><i></i></div>
+
+    <!-- title lockup, only in the opening beat -->
+    <div class="titleblock" id="titleblock">
+      <p class="titleblock__kicker">うちはの誇り · 木ノ葉の忍 · 暁</p>
+      <h1 class="titleblock__jp">うちは<span>イタチ</span></h1>
+      <p class="titleblock__en">I T A C H I &nbsp; U C H I H A</p>
+    </div>
+
+    <div class="scrub__scrim" aria-hidden="true"></div>
+
+    <div class="phase" data-phase="0">
+      <h2 class="phase__jp">孤高</h2>
+      <p class="phase__en">SOLITUDE</p>
+      <p class="phase__sub">「人は、自分自身の知識や認識に縛られ、それを現実と呼んでいる。」</p>
+    </div>
+    <div class="phase" data-phase="1">
+      <h2 class="phase__jp">開眼</h2>
+      <p class="phase__en">THE SHARINGAN</p>
+      <p class="phase__sub">At age eight, awakening through the crucible of loss and war.</p>
+    </div>
+    <div class="phase" data-phase="2">
+      <h2 class="phase__jp">万華鏡</h2>
+      <p class="phase__en">MANGEKYO</p>
+      <p class="phase__sub">月読と天照 — Twin ocular catastrophes born in the abyss of sorrow.</p>
+    </div>
+    <div class="phase" data-phase="3">
+      <h2 class="phase__jp">真実</h2>
+      <p class="phase__en">THE UNSUNG HERO</p>
+      <p class="phase__sub">「どんなに闇と矛盾を抱えていようと、オレは木ノ葉のうちはイタチだ。」</p>
+    </div>
+
+    <div class="scrub__readout"><span id="scrubReadout">FRAME 001 / 071</span></div>
+    <div class="hint" id="heroHint"><span>下へ · SCROLL TO ENTER HIS GENJUTSU</span></div>
+  </div>
+</section>
+
+<!-- ══════════ ACT V — TSUKUYOMI, TRACKED LEFT TO RIGHT ══════════ -->
+<section class="ras" id="rasengan">
+  <div class="ras__sticky">
+    <canvas id="rasCanvas"></canvas>
+    <canvas class="ras__chakra" id="chakraCanvas" aria-hidden="true"></canvas>
+
+    <div class="ras__copy">
+      <span class="eyebrow" data-decrypt="万華鏡奥義 · 月読">万華鏡奥義 · 月読</span>
+      <h2 data-split>瞳の奥に</h2>
+      <p>七十二時間の悪夢を、一瞬の刹那に。 In the Tsukuyomi realm, time, space, and physical mass bend to his will. <b>Move left to right</b> — the illusion follows your command.</p>
+      <div class="ras__gauge">
+        <div class="ras__gauge-bar"><span id="rasFill"></span></div>
+        <div class="ras__gauge-meta">
+          <span id="rasPos">浸食 左 00%</span>
+          <span id="rasFrame">FRAME 01 / 33</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ras__track" id="rasTrack" aria-hidden="true">
+      <span class="ras__track-l">左</span>
+      <i></i>
+      <span class="ras__track-r">右</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ ACT II — PARTICLE OBJECT: FLOCK OF CROWS ══════════ -->
+<section class="hero" id="particles">
+  <canvas class="hero__particles" id="particleCanvas"></canvas>
+  <div class="hero__fallback" id="heroFallback" hidden>
+    <img src="art/hero.jpg?v=itachi?v=itachi" alt="Itachi Uchiha under the Blood Moon" />
+    <div class="cornermask" aria-hidden="true"></div>
+  </div>
+
+  <div class="hero__grid" aria-hidden="true"></div>
+
+  <div class="hero__copy">
+    <p class="hero__kicker" data-decrypt="漆黒の烏 · SHROUD OF CROWS">漆黒の烏 · SHROUD OF CROWS</p>
+    <h2 class="hero__title">
+      <span class="hero__jp notranslate" translate="no" data-split>実体なき幻</span>
+      <span class="hero__en" data-split>YOU&nbsp;CANNOT&nbsp;TOUCH&nbsp;HIM</span>
+    </h2>
+    <p class="hero__lede" data-reveal>
+      幻術と烏分身。 You were trapped within his Tsukuyomi before you even met his gaze.
+      Touch, click, or sweep through him to scatter his particle body into a whirlwind of crows and feathers;
+      reassembling in silence before you can draw breath.
+    </p>
+    <div class="hero__stats">
+      <div class="stat" data-reveal><b data-count="0.01" data-dec="2">0.00</b><i>s 瞳術 · OCULAR SPEED</i></div>
+      <div class="stat" data-reveal><b data-count="13">0</b><i>歳 暗部分隊長 · ANBU CAPTAIN</i></div>
+      <div class="stat" data-reveal><b data-count="1">0</b><i>族の宿命 · UCHIHA DESTINY</i></div>
+    </div>
+    <a class="magnet" href="#dash" data-magnet>
+      <span class="magnet__in">
+        <span class="magnet__jp">深淵へ</span>
+        <span class="magnet__en">ENTER THE ABYSS</span>
+      </span>
+    </a>
+  </div>
+</section>
+
+<!-- ══════════ ACT IV — 烏分身 / FULL-BLEED DASH ══════════ -->
+<section class="dash" id="dash" title="クリックで烏分身を放つ / Click to Scatter Crows">
+  <div class="dash__sticky">
+    <div class="dash__bg" id="dashBg" aria-hidden="true">
+      <div class="dash__eye-glow dash__eye-glow--left"></div>
+      <div class="dash__eye-glow dash__eye-glow--right"></div>
+    </div>
+    <canvas id="dashCanvas"></canvas>
+    <div class="dash__streaks" aria-hidden="true"></div>
+    <div class="dash__copy">
+      <span class="eyebrow" data-decrypt="烏分身 · WHAT THE SHINOBI ACTUALLY SEES">烏分身 · WHAT THE SHINOBI ACTUALLY SEES</span>
+      <h2 data-split>幻か、現実か</h2>
+      <p>一瞬の瞬き、無数の羽音。 In seventy-one frames, the boundary between reality and nightmare dissolves into the black feather vortex.</p>
+    </div>
+    <div class="dash__readout"><span id="dashReadout">0.00 s</span></div>
+    <div class="dash__hint" aria-hidden="true"><span>画面をクリック · DISPERSE CROWS</span></div>
+  </div>
+</section>
+
+<!-- ══════════ ACT VI — LEGACY: GHOST CURSOR + AMATERASU ══════════ -->
+<section class="legacy" id="legacy">
+  <div class="legacy__plate" aria-hidden="true"></div>
+  <div class="legacy__reveal" id="legacyReveal" aria-hidden="true"></div>
+  <canvas class="legacy__ghost" id="ghostCanvas" aria-hidden="true"></canvas>
+  <div class="cornermask" aria-hidden="true"></div>
+
+  <div class="legacy__inner">
+    <p class="eyebrow" data-decrypt="哀しき宿命 · THE TRAGEDY OF THE UCHIHA">哀しき宿命 · THE TRAGEDY OF THE UCHIHA</p>
+ 
+    <p class="legacy__hint">動かせ · SWEEP THE CROWS TO REVEAL HIM</p>
+  </div>
+  <div class="footer__big" data-split>許せサスケ</div>
+  <p class="footer__dev">THIS SITE IS DEVELOPED BY <span class="footer__dev-name">JOE</span></p>
+
+  <div class="legacy__seal" aria-hidden="true">
+    <span class="legacy__seal-jp">転写封印 · 天照</span>
+  </div>
+</section>
+
+</main>
+
+<div class="badge" id="badge">
+  <span class="badge__jp">万華鏡写輪眼</span>
+  <span class="badge__en">MANGEKYO SHARINGAN</span>
+</div>
+
+<script type="module" src="itachi.js?v=itachi_joe_v8"></script>
+</body>
+</html>
