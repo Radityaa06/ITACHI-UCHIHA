@@ -118,6 +118,37 @@ img { max-width: 100%; display: block; }
   font-family: var(--mono); font-size: 10px; letter-spacing: .22em;
   color: var(--mute);
 }
+.loader__enter {
+  margin-top: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 11px 26px;
+  background: rgba(255, 26, 53, 0.22);
+  border: 1px solid rgba(255, 26, 53, 0.7);
+  border-radius: 999px;
+  color: #ffffff;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.3s var(--ease);
+  box-shadow: 0 0 22px rgba(255, 26, 53, 0.4);
+  animation: loaderEnterPulse 2s ease-in-out infinite alternate;
+}
+.loader__enter:hover {
+  background: rgba(255, 26, 53, 0.42);
+  border-color: #ff1a35;
+  box-shadow: 0 0 35px rgba(255, 26, 53, 0.8);
+  transform: translateY(-2px);
+}
+@keyframes loaderEnterPulse {
+  0%   { box-shadow: 0 0 14px rgba(255, 26, 53, 0.25); border-color: rgba(255, 26, 53, 0.5); }
+  100% { box-shadow: 0 0 30px rgba(255, 26, 53, 0.8); border-color: #ff1a35; }
+}
 
 /* ───────────────── AMBIENT ───────────────── */
 .grain {

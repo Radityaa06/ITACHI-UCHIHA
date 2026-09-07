@@ -827,6 +827,17 @@ if (document.readyState === 'loading') {
   startBgm();
 }
 
+const loaderEnterBtn = document.getElementById('loaderEnterBtn');
+if (loaderEnterBtn) {
+  loaderEnterBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    playBgmAudible().catch(() => {});
+    if (loaderEl && !loaderEl.classList.contains('done')) {
+      markReady();
+    }
+  });
+}
+
 if (loaderEl) {
   loaderEl.addEventListener('pointerdown', () => {
     playBgmAudible().catch(() => {});
@@ -838,7 +849,7 @@ if (audioBtn) {
     e.stopPropagation();
     if (!bgmAudio) return;
     if (bgmAudio.paused) {
-      bgmAudio.volume = 0.75;
+      bgmAudio.volume = TARGET_BGM_VOLUME;
       bgmAudio.play().then(() => {
         bgmStarted = true;
         audioBtn.classList.add('is-playing');
