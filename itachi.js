@@ -63,9 +63,15 @@ const window4 = (p, a, b, c, d) =>
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const coarse = matchMedia('(pointer: coarse)').matches;
 
+const isMobileScreen = () => coarse || (window.innerWidth < 860);
+
+function getCanvasDpr() {
+  return isMobileScreen() ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+}
+
 function fitCanvas(canvas) {
   if (!canvas) return null;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const dpr = getCanvasDpr();
   const w = Math.round((canvas.offsetWidth || 0) * dpr);
   const h = Math.round((canvas.offsetHeight || 0) * dpr);
   if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
@@ -73,7 +79,7 @@ function fitCanvas(canvas) {
 }
 function stale(canvas) {
   if (!canvas) return false;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const dpr = getCanvasDpr();
   return canvas.width !== Math.round((canvas.offsetWidth || 0) * dpr) ||
          canvas.height !== Math.round((canvas.offsetHeight || 0) * dpr);
 }
@@ -236,7 +242,7 @@ import('./particle-object.js?v=disperse_v2')
   .then(({ createParticleObject }) => {
     particles = createParticleObject({ canvas: particleCanvas }, {
       src: 'art/particle-itachi.png?v=itachi',
-      count: coarse ? 24000 : 46000,   // density is what makes the face legible
+      count: coarse ? 14000 : 46000,   // density is what makes the face legible
       size: 1.9,
       sizeVariance: 0.3,
       radius: 130,
@@ -551,6 +557,7 @@ function burst(x, y, n = 16, hue = 'gold', power = 1) {
 }
 
 function paintSparks() {
+  if (sparks.length === 0) return;
   const w = sparkCanvas.width, h = sparkCanvas.height;
   sparkCtx.clearRect(0, 0, w, h);
   sparkCtx.lineCap = 'round';

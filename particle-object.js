@@ -604,7 +604,8 @@ export function createParticleObject(elements, options = {}) {
   function resize() {
     const width = Math.max(canvas.clientWidth, 1);
     const height = Math.max(canvas.clientHeight, 1);
-    const pr = Math.min(window.devicePixelRatio || 1, 2);
+    const isMobileDevice = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 860;
+    const pr = isMobileDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2);
     renderer.setPixelRatio(pr);
     renderer.setSize(width, height, false);
     material.uniforms.uDpr.value = pr;
