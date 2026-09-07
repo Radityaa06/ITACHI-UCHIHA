@@ -49,7 +49,9 @@ body {
   background: var(--void);
   color: var(--paper);
   font-family: var(--sans);
-  overflow-x: hidden;
+  overflow-x: clip;
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
   cursor: none;
 }
 /* the page fades up behind the loader — the loader itself must stay visible */
@@ -216,6 +218,8 @@ img { max-width: 100%; display: block; }
   font-size: 10px; letter-spacing: .26em; padding-bottom: 4px;
   font-family: var(--mono);
 }
+.nav-en { display: inline; }
+.nav-jp { display: none; }
 .chrome__nav a::before {
   content: attr(data-jp);
   position: absolute; inset: -2px 0 auto 0; text-align: center;
@@ -993,4 +997,190 @@ footer {
 .cursor.touch-ready b {
   background: #ff1a35;
   box-shadow: 0 0 20px #ff1a35;
+}
+
+/* ═════════════════ MOBILE RESPONSIVE ENHANCEMENTS ═════════════════ */
+@media (max-width: 860px) {
+  .chrome {
+    padding: 14px 16px;
+  }
+  .chrome__clock {
+    display: none;
+  }
+  .audio-btn__label {
+    display: none;
+  }
+  .audio-btn {
+    padding: 5px 10px;
+    gap: 6px;
+  }
+  .rail {
+    display: none;
+  }
+  .badge {
+    display: none;
+  }
+
+  /* Act II Hero */
+  .hero {
+    padding: 84px 20px 52px;
+    align-items: end;
+  }
+  .hero__copy, .hero__lede {
+    max-width: none;
+  }
+  .hero__title .hero__jp {
+    font-size: clamp(34px, 8.5vw, 64px);
+  }
+  .hero__stats {
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .stat b {
+    font-size: clamp(24px, 5.5vw, 38px);
+  }
+
+  /* Act IV Dash */
+  .dash__bg {
+    background-position: 52% 38%;
+  }
+  .dash__readout {
+    top: auto;
+    bottom: clamp(18px, 3.5vh, 40px);
+    right: clamp(16px, 4vw, 28px);
+    left: auto;
+    font-size: 20px;
+    letter-spacing: 0.12em;
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.95);
+  }
+  .dash__copy {
+    bottom: clamp(18px, 3.5vh, 44px);
+    left: clamp(16px, 4vw, 24px);
+    max-width: 70vw;
+  }
+  .dash__copy h2 {
+    font-size: clamp(30px, 8vw, 48px);
+  }
+  .dash__copy p {
+    font-size: 11px;
+    line-height: 1.6;
+    max-width: 32ch;
+  }
+  .dash__hint {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .nav-en {
+    display: none;
+  }
+  .nav-jp {
+    display: inline-block;
+    font-family: var(--jp);
+    font-size: 13px;
+    font-weight: 700;
+    color: #f8eef1;
+    padding: 2px 4px;
+  }
+  .chrome__nav {
+    gap: 6px;
+  }
+  .chrome__nav a::before {
+    display: none;
+  }
+  .chrome__nav a:hover {
+    color: #ff2a44;
+  }
+
+  /* Act I */
+  .titleblock {
+    top: 42%;
+    width: 92vw;
+  }
+  .titleblock__kicker {
+    font-size: 8.5px;
+    letter-spacing: 0.24em;
+    margin-bottom: 10px;
+  }
+  .titleblock__jp {
+    font-size: clamp(36px, 10vw, 60px);
+    line-height: 1.02;
+  }
+  .titleblock__en {
+    margin-top: 12px;
+    font-size: 8.5px;
+    letter-spacing: 0.32em;
+  }
+  .phase {
+    bottom: clamp(56px, 10vh, 92px);
+    width: 92vw;
+  }
+  .phase__jp {
+    font-size: clamp(26px, 7.5vw, 38px);
+  }
+  .phase__sub {
+    font-size: 11px;
+    padding: 0 6px;
+    line-height: 1.55;
+  }
+  .scrub__readout {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 40px;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 8.5px;
+    letter-spacing: 0.2em;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .hint {
+    bottom: 18px;
+    font-size: 8px;
+    letter-spacing: 0.22em;
+    white-space: nowrap;
+  }
+
+  /* Act IV eye glows on portrait crop */
+  .dash__eye-glow {
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+  }
+  .dash__eye-glow--left {
+    left: 50.6%;
+    top: 8.4%;
+  }
+  .dash__eye-glow--right {
+    left: 63.6%;
+    top: 9.2%;
+  }
+
+  /* Act V Tsukuyomi */
+  .ras__copy {
+    left: 18px;
+    bottom: 24px;
+    width: calc(100% - 36px);
+    max-width: none;
+  }
+  .ras__copy h2 {
+    font-size: clamp(28px, 7.5vw, 38px);
+  }
+  .ras__copy p {
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
+  /* Act VI Legacy & Footer */
+  .footer__big {
+    font-size: clamp(44px, 13vw, 76px);
+  }
+  .footer__dev {
+    padding: 6px 14px;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    gap: 6px;
+    max-width: 92vw;
+    white-space: nowrap;
+  }
 }

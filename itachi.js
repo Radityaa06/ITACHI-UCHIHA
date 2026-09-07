@@ -211,7 +211,7 @@ function load(src, bucket, index) {
 }
 
 const jobs = [];
-const BUST = '?itachi=' + Date.now();
+const BUST = '?v=itachi1';
 for (let i = 1; i <= GAZE_COUNT; i++) jobs.push(load(`frames/gaze/${pad(i)}.jpg${BUST}`, gazeFrames, i - 1));
 for (let i = 1; i <= RAS_COUNT; i++) jobs.push(load(`frames/rasengan/${pad(i)}.jpg${BUST}`, rasFrames, i - 1));
 jobs.push(load(`art/dash.jpg?v=4k`, dashFrames, 0));
@@ -643,9 +643,18 @@ function paintScrub() {
   if (idx !== lastDrawn || stale(gazeCanvas)) {
     if (stale(gazeCanvas)) gazeCtx = fitCanvas(gazeCanvas);
     const w = gazeCanvas.width, h = gazeCanvas.height;
-    gazeCtx.clearRect(0, 0, w, h);
-    drawCover(gazeCtx, gazeFrames[idx], w, h, 2.1);
-    lastDrawn = idx;
+    const targetImg = (gazeFrames[idx] && gazeFrames[idx].naturalWidth)
+      ? gazeFrames[idx]
+      : ((lastDrawn >= 0 && gazeFrames[lastDrawn] && gazeFrames[lastDrawn].naturalWidth)
+        ? gazeFrames[lastDrawn]
+        : gazeFrames[0]);
+    if (targetImg && targetImg.naturalWidth) {
+      gazeCtx.clearRect(0, 0, w, h);
+      drawCover(gazeCtx, targetImg, w, h, 2.1);
+      if (gazeFrames[idx] && gazeFrames[idx].naturalWidth) {
+        lastDrawn = idx;
+      }
+    }
   }
   paintScrubOverlays(scrubP);
 }
@@ -760,43 +769,69 @@ function paintBolts(t) {
 
 /* ═══════════════ ITACHI BGM AUDIO CONTROLLER ═══════════════ */
 let bgmStarted = false;
-let bgmVolumeRamp = null;
+const TARGET_BGM_VOLUME = 0.85;
+
+function playBgmAudible() {
+  if (!bgmAudio) return Promise.reject(new Error('no audio element'));
+  bgmAudio.volume = TARGET_BGM_VOLUME;
+  const playPromise = bgmAudio.play();
+  if (playPromise !== undefined) {
+    return playPromise.then(() => {
+      bgmStarted = true;
+      if (audioBtn) {
+        audioBtn.classList.add('is-playing');
+        audioBtn.classList.remove('is-muted');
+      }
+      if (audioBtnIcon) audioBtnIcon.textContent = '🔊';
+      detachAudioUnlockers();
+    }).catch(err => {
+      return Promise.reject(err);
+    });
+  }
+  return Promise.resolve();
+}
 
 function startBgm() {
-  if (!bgmAudio) return;
-  if (bgmAudio.paused) {
-    bgmAudio.volume = 0;
-    const playPromise = bgmAudio.play();
-    if (playPromise !== undefined) {
-      playPromise.then(() => {
-        bgmStarted = true;
-        if (audioBtn) {
-          audioBtn.classList.add('is-playing');
-          audioBtn.classList.remove('is-muted');
-        }
-        if (audioBtnIcon) audioBtnIcon.textContent = '🔊';
-        let vol = 0;
-        if (bgmVolumeRamp) clearInterval(bgmVolumeRamp);
-        bgmVolumeRamp = setInterval(() => {
-          vol = Math.min(0.75, vol + 0.035);
-          bgmAudio.volume = vol;
-          if (vol >= 0.75) clearInterval(bgmVolumeRamp);
-        }, 65);
-      }).catch(() => {});
-    }
-  }
+  playBgmAudible().catch(() => {});
 }
 
 function unlockAudioOnGesture() {
-  if (bgmStarted) return;
-  startBgm();
-  ['pointerdown', 'keydown', 'touchstart', 'wheel', 'scroll'].forEach(evt => {
-    window.removeEventListener(evt, unlockAudioOnGesture, { passive: true });
+  if (bgmStarted && bgmAudio && !bgmAudio.paused) {
+    detachAudioUnlockers();
+    return;
+  }
+  playBgmAudible().catch(() => {});
+}
+
+const UNLOCK_EVENTS = ['pointerdown', 'touchstart', 'touchend', 'click', 'keydown'];
+
+function attachAudioUnlockers() {
+  UNLOCK_EVENTS.forEach(evt => {
+    document.addEventListener(evt, unlockAudioOnGesture, { capture: true, passive: true });
+    window.addEventListener(evt, unlockAudioOnGesture, { capture: true, passive: true });
   });
 }
-['pointerdown', 'keydown', 'touchstart', 'wheel', 'scroll'].forEach(evt => {
-  window.addEventListener(evt, unlockAudioOnGesture, { passive: true, once: true });
-});
+
+function detachAudioUnlockers() {
+  UNLOCK_EVENTS.forEach(evt => {
+    document.removeEventListener(evt, unlockAudioOnGesture, { capture: true });
+    window.removeEventListener(evt, unlockAudioOnGesture, { capture: true });
+  });
+}
+
+attachAudioUnlockers();
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startBgm, { once: true });
+} else {
+  startBgm();
+}
+
+if (loaderEl) {
+  loaderEl.addEventListener('pointerdown', () => {
+    playBgmAudible().catch(() => {});
+  });
+}
 
 if (audioBtn) {
   audioBtn.addEventListener('click', e => {
@@ -937,8 +972,9 @@ function triggerCrowBurst(clickX, clickY) {
 
 if (dashSection) {
   dashSection.addEventListener('pointerdown', e => {
-    const r = dashSection.getBoundingClientRect();
-    triggerCrowBurst(e.clientX, e.clientY - r.top);
+    const stickyEl = dashSection.querySelector('.dash__sticky') || dashSection;
+    const r = stickyEl.getBoundingClientRect();
+    triggerCrowBurst(e.clientX - r.left, e.clientY - r.top);
   });
 }
 
@@ -1047,6 +1083,8 @@ function drawFeather(ctx, f) {
 function paintDash(dt = 16, t = performance.now()) {
   const r = dashSection.getBoundingClientRect();
   if (r.bottom < -120 || r.top > window.innerHeight + 120) return;
+  const stickyEl = dashSection.querySelector('.dash__sticky') || dashSection;
+  const rSticky = stickyEl.getBoundingClientRect();
   const span = r.height - window.innerHeight;
   const p = clamp(-r.top / (span || 1));
 
@@ -1111,7 +1149,7 @@ function paintDash(dt = 16, t = performance.now()) {
     const swayX = Math.sin(f.swayPhase) * 1.4;
 
     const dx = curX - f.x;
-    const dy = (curY - r.top) - f.y;
+    const dy = (curY - rSticky.top) - f.y;
     const dist = Math.hypot(dx, dy);
     if (dist < mouseDistFeather) {
       const force = (1 - dist / mouseDistFeather) * 4;
@@ -1149,7 +1187,7 @@ function paintDash(dt = 16, t = performance.now()) {
     c.wingPhase += c.flapSpeed * deltaSec;
 
     const dx = curX - c.x;
-    const dy = (curY - r.top) - c.y;
+    const dy = (curY - rSticky.top) - c.y;
     const dist = Math.hypot(dx, dy);
     if (dist < mouseDistCrow) {
       const repel = (1 - dist / mouseDistCrow) * 5.5;
@@ -1227,9 +1265,18 @@ function paintRas(dt) {
   if (idx !== rasDrawn || stale(rasCanvas)) {
     if (stale(rasCanvas)) rasCtx = fitCanvas(rasCanvas);
     const w = rasCanvas.width, h = rasCanvas.height;
-    rasCtx.clearRect(0, 0, w, h);
-    drawCover(rasCtx, rasFrames[idx], w, h, 2.2);
-    rasDrawn = idx;
+    const targetImg = (rasFrames[idx] && rasFrames[idx].naturalWidth)
+      ? rasFrames[idx]
+      : ((rasDrawn >= 0 && rasFrames[rasDrawn] && rasFrames[rasDrawn].naturalWidth)
+        ? rasFrames[rasDrawn]
+        : rasFrames[0]);
+    if (targetImg && targetImg.naturalWidth) {
+      rasCtx.clearRect(0, 0, w, h);
+      drawCover(rasCtx, targetImg, w, h, 2.2);
+      if (rasFrames[idx] && rasFrames[idx].naturalWidth) {
+        rasDrawn = idx;
+      }
+    }
   }
 
   rasFill.style.width = (easedX * 100).toFixed(1) + '%';
@@ -1380,6 +1427,18 @@ function paintLegacy() {
 let curX = innerWidth / 2, curY = innerHeight / 2, cx = curX, cy = curY;
 
 addEventListener('pointermove', e => { curX = e.clientX; curY = e.clientY; }, { passive: true });
+addEventListener('touchmove', e => {
+  if (e.touches && e.touches[0]) {
+    curX = e.touches[0].clientX;
+    curY = e.touches[0].clientY;
+  }
+}, { passive: true });
+addEventListener('touchstart', e => {
+  if (e.touches && e.touches[0]) {
+    curX = e.touches[0].clientX;
+    curY = e.touches[0].clientY;
+  }
+}, { passive: true });
 document.querySelectorAll('a, .tilt, .stat, .ras__sticky').forEach(el => {
   el.addEventListener('pointerenter', () => cursorEl.classList.add('hot'));
   el.addEventListener('pointerleave', () => cursorEl.classList.remove('hot'));
@@ -1450,7 +1509,10 @@ function frame(t) {
 requestAnimationFrame(frame);
 
 
-Promise.all(jobs).then(() => setTimeout(() => {
+let siteReady = false;
+function markReady() {
+  if (siteReady) return;
+  siteReady = true;
   loaderEl.classList.add('done');
   document.body.classList.add('ready');
   resizeAll();
@@ -1472,4 +1534,7 @@ Promise.all(jobs).then(() => setTimeout(() => {
   }, 300);
 
   setTimeout(() => { loaderEl.style.display = 'none'; }, 900);
-}, 360));
+}
+
+Promise.all(jobs).then(() => setTimeout(markReady, 360)).catch(markReady);
+setTimeout(markReady, 2500);
